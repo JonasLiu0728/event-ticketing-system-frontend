@@ -22,7 +22,9 @@ interface FAQ {
 
 function toDatetimeLocal(iso: string | null | undefined): string {
   if (!iso) return ""
-  return iso.slice(0, 16)
+  const date = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 function EditEventPage() {
