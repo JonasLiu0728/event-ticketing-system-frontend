@@ -1,0 +1,277 @@
+# 企業活動訂票系統 — 前端架構文件
+
+> 最後更新：2026-06-10
+
+---
+
+## 技術棧
+
+| 項目 | 技術 |
+|------|------|
+| 框架 | React 19 + TypeScript + Vite |
+| 樣式 | Tailwind CSS v4 |
+| 資料層 | TanStack React Query（staleTime 5min，retry 2） |
+| 動畫 | Framer Motion |
+| 地圖 | Leaflet / react-leaflet |
+| 單元測試 | Vitest + @testing-library/react |
+| E2E 測試 | Playwright |
+| 部署 | Vercel |
+| 監控 | Sentry（`@sentry/react ^10.55.0`） |
+
+---
+
+## 環境變數
+
+```env
+VITE_ACCOUNT_API_URL   # Account Service URL
+VITE_EVENT_API_URL     # Event Service URL
+VITE_TX_API_URL        # Transaction Service URL
+VITE_TICKET_API_URL    # Ticket Service URL
+VITE_USE_MOCK          # true = 用 mock 資料，false = 打真實後端
+VITE_SENTRY_DSN        # Sentry DSN（設在 Vercel 環境變數）
+```
+
+`VITE_USE_MOCK=true` 時完全不打後端，用 `src/mock/` 資料。
+
+---
+
+## 後端微服務（GKE）
+
+| 服務 | Base URL |
+|------|----------|
+| Account | `https://cnticketsystem.xyz/account/v1` |
+| Event | `https://cnticketsystem.xyz/event/v1` |
+| Transaction | `https://cnticketsystem.xyz/transaction/v1` |
+| Ticket | `https://cnticketsystem.xyz/ticket/v1` |
+
+DNS：Cloudflare → 35.221.158.188（Ingress Controller，HTTPS 443）
+
+---
+
+## 角色定義與測試帳號
+
+| 角色 | role 值 | 登入按鈕 | 登入後跳轉 | 帳號 | 密碼 |
+|------|---------|---------|-----------|------|------|
+| 福委 | `welfare_member` | 福委登入 | `/admin/events` | welfare_001 | password123 |
+| 員工 | `employee` | 員工登入 | `/events` | 1000001 / 1000002 | password123 |
+| HR | `hr` | HR 登入 | `/admin/hr` | hr_001 | password123 |
+
+Mock 帳號（localhost）：`admin / employee / hr`，密碼 `1234`
+
+---
+
+## 專案結構
+
+```
+src/
+├── api/
+│   ├── auth.ts          # login / logout / getMe / saveToken
+│   ├── events.ts        # getEvents / getEventById / createEvent / updateEvent / deleteEvent
+│   ├── transactions.ts  # checkEligibility / getTransactions / createTransaction / cancelTransaction
+│   ├── tickets.ts       # getTickets / getTicketById / checkin / getEventTickets
+│   ├── users.ts         # getUsers / updateUserRole / unlockUser / deleteUser
+│   └── fetchWithRetry.ts # 指數退避重試，abort signal 支援，5xx 才 retry
+│
+├── components/
+│   ├── Navbar.tsx        # 根據 role 顯示不同連結，30min 自動登出
+│   ├── EventCard.tsx     # data-testid="event-card"，data-testid="event-status"
+│   ├── Toast.tsx         # success / error / info / warning 四種
+│   ├── Skeleton.tsx      # EventCard / Ticket / Transaction / EventRow / UserRow / StatCard
+│   ├── MapPicker.tsx     # Leaflet 地圖選點，可拖曳 marker
+│   └── PageTransition.tsx # Framer Motion 淡入淡出
+│
+├── config/
+│   └── app.config.ts    # API URLs / auth 設定 / mock 設定（mockDelayMs: 800）
+│
+├── hooks/
+│   ├── useAutoLogout.ts  # 30min 自動登出，每次路由變化重設計時器
+│   ├── useDebounce.ts    # debounce hook，報名按鈕 500ms，搜尋 400ms
+│   └── useToast.ts       # toast 狀態管理，3 秒後自動消失
+│
+├── mock/
+│   ├── events.ts         # MOCK_EVENTS（10 筆）/ MOCK_ELIGIBILITY
+│   ├── tickets.ts        # MOCK_TICKETS / MOCK_CHECKIN_TICKETS
+│   ├── transactions.ts   # MOCK_TRANSACTIONS / MOCK_REGISTRATIONS
+│   └── users.ts          # MOCK_USERS（3 筆：employee / hr / locked）
+│
+├── pages/
+│   ├── LoginPage.tsx         # 4 種登入入口（員工/福委/HR/第一次）
+│   ├── OnboardingPage.tsx    # 第一次登入設定偏好，employee/hr 用
+│   ├── WelcomePage.tsx       # 福委第一次登入歡迎頁
+│   ├── EventListPage.tsx     # 搜尋、分類篩選、排序、AnimatePresence
+│   ├── EventDetailPage.tsx   # 報名/候補/取消，eligibility API，debounce
+│   ├── MyTicketsPage.tsx     # 票券列表，過濾孤兒記錄（isOrphanRecord）
+│   ├── MyTransactionsPage.tsx # 報名記錄，取消截止判斷
+│   ├── TicketDetailPage.tsx  # 報到按鈕，geolocation
+│   ├── ProfilePage.tsx       # 活動偏好、飲食需求、自行開車設定
+│   └── admin/
+│       ├── EventManagePage.tsx      # 活動列表（管理用）
+│       ├── CreateEventPage.tsx      # 建立活動，地圖選點，報名天數計算
+│       ├── EditEventPage.tsx        # 編輯活動，刪除（含 toDatetimeLocal 修正）
+│       ├── CheckinPage.tsx          # 手動核銷，搜尋票券
+│       ├── RegistrationDetailPage.tsx # 報名統計，狀態篩選
+│       ├── UserManagePage.tsx       # 使用者管理，角色變更，解鎖，刪除
+│       └── HRDashboardPage.tsx      # 統計報表，Promise.allSettled
+│
+├── types/index.ts
+│   # Role = "welfare_member" | "employee" | "hr"
+│   # EventStatus = "not_open" | "registering" | "waitlist" | "closed" | "ended"
+│   # TicketStatus = "used" | "unused" | "invalid"
+│   # DietType = "veg" | "non-veg" | null
+│   # User / Event / Transaction / Ticket / Notification / ApiResponse / PaginatedResponse
+│
+└── utils/
+    ├── cancellation.ts  # canCancel(tx, now)：非 confirmed = false，看 cancellationDeadline 或 eventStartTime
+    ├── diet.ts          # getDietLabel / getDietEmoji / normalizeDiet
+    ├── eligibility.ts   # canRegister / canWaitlist / getEligibilityMessage / getRemainingTicketsStatus
+    ├── eventStatus.ts   # STATUS_CONFIG / getStatusConfig / CATEGORY_EMOJI / isLowTicket / isFull
+    ├── orphan.ts        # isOrphanRecord：null/空字串/"Unknown Event" = true，後端刪活動但票券還在
+    ├── roles.ts         # getRoleLabel / canManageEvents / canViewStats / canRegister / getDefaultRoute
+    ├── sortEvents.ts    # sortEvents(events, sort)：recommended/popular/status_registering/status_waitlist
+    ├── ticketStatus.ts  # TICKET_STATUS_CONFIG / getStatusLabel / canCheckin / isExpired
+    └── validateEventForm.ts
+        # 必填：name / category / location / eventStartTime
+        # eventEnd > eventStart
+        # registrationEnd > registrationStart
+        # registrationEnd <= eventEndTime（注意：不是 <= eventStartTime）
+        # cancellationDeadline <= eventStartTime
+```
+
+---
+
+## App.tsx 路由結構
+
+```
+/                          → LoginPage（公開）
+/onboarding                → OnboardingPage（登入後，第一次登入）
+/welcome                   → WelcomePage（welfare_member 第一次登入）
+/events                    → EventListPage（所有角色）
+/events/:eventId           → EventDetailPage（所有角色）
+/profile                   → ProfilePage（所有角色）
+/my-transactions           → MyTransactionsPage（employee / hr）
+/my-tickets                → MyTicketsPage（employee / hr）
+/my-tickets/:ticketId      → TicketDetailPage（employee / hr）
+/admin/events              → EventManagePage（welfare_member）
+/admin/events/new          → CreateEventPage（welfare_member）
+/admin/events/:id/edit     → EditEventPage（welfare_member）
+/admin/events/:id/checkin  → CheckinPage（welfare_member）
+/admin/events/:id/registrations → RegistrationDetailPage（welfare_member / hr）
+/admin/users               → UserManagePage（welfare_member）
+/admin/hr                  → HRDashboardPage（welfare_member / hr）
+```
+
+---
+
+## Playwright 設定
+
+```ts
+// playwright.config.ts
+projects: [
+  { name: "mock",       baseURL: "http://localhost:5173" },
+  { name: "production", baseURL: "https://event-ticketing-system-frontend-eight.vercel.app" },
+  { name: "demo",       baseURL: Vercel URL, headless: false, slowMo: 800, video: "on" },
+]
+```
+
+### E2E 測試檔案
+
+| 檔案 | 說明 |
+|------|------|
+| `auth.spec.ts` | 登入/登出流程 |
+| `admin.spec.ts` | 福委：活動管理、報名詳情、使用者管理、核銷 |
+| `employee.spec.ts` | 員工：活動瀏覽、報名流程、票券、個人資料 |
+| `Hr.spec.ts` | HR：儀表板、活動、權限 |
+| `Ticketrace.spec.ts` | Race condition：兩人搶最後一張票（有 https://） |
+| `checkinFlow.spec.ts` | 核銷完整流程：建活動→報名→核銷→冪等性驗證 |
+| `demo-login.spec.ts` | Demo：三種角色登入 + onboarding |
+| `demo-employee.spec.ts` | Demo：員工完整操作（beforeAll 建活動） |
+| `demo-checkin.spec.ts` | Demo：範圍內/外報到兩種情境 |
+| `demo-welfare.spec.ts` | Demo：新增/編輯/刪除活動、使用者角色 |
+| `demo-hr.spec.ts` | Demo：統計報表、報名名單（beforeAll 建活動） |
+
+### E2E 慣例
+
+```ts
+// 需要活動資料的測試
+test.describe.configure({ mode: "serial" })  // 依序執行
+
+test.beforeAll(async () => {
+  // 1. 用 API 登入取得 token
+  // 2. 建立活動（名稱加 [自動測試] 或 [Demo] + timestamp）
+  // 3. 視需要預先報名
+})
+
+test.afterAll(async () => {
+  // 1. 取消報名（try-catch）
+  // 2. 刪除活動（try-catch）
+})
+```
+
+---
+
+## 已知問題與修正
+
+| 問題 | 狀態 | 說明 |
+|------|------|------|
+| `EditEventPage.toDatetimeLocal` | ✅ 已修正 | 原本直接 slice UTC 字串，時間差 8 小時；改用 `new Date(iso)` 轉本地時間 |
+| `raceCondition.spec.ts` URL 缺 `https://` | ✅ 已修正（或刪除） | `Ticketrace.spec.ts` 已覆蓋相同情境 |
+| `remainingTickets` 後端不即時遞減 | ⚠️ 後端問題 | 即時票數只在 EventDetailPage 透過 `checkEligibility` API 取得 |
+| 孤兒票券/報名（Unknown Event） | ✅ 前端已處理 | `isOrphanRecord()` 過濾，UI 不顯示 |
+| `cancellationDeadline` 後端未回傳 | ⚠️ 後端問題 | 前端 fallback 用 `eventStartTime` 判斷 |
+| HR 票券/報名 API 被擋 | ⚠️ 後端問題 | `GET /tickets` / `POST /transactions` 只允許 employee |
+
+---
+
+## 重要業務邏輯
+
+### 報名流程
+```
+checkEligibility → eligible=true, isWaitlist=false → 立即報名
+                 → eligible=true, isWaitlist=true  → 加入候補
+                 → eligible=false, reason=LOCKED   → 帳號鎖定
+                 → eligible=false, reason=ALREADY_REGISTERED → 已報名
+createTransaction → status=confirmed → 報名成功
+                 → status=waitlist   → 票被搶走，進候補
+                 → 409 NO_TICKETS   → 差一點，進候補
+```
+
+### 票券狀態
+```
+invalid  → 活動未開始（未開放）
+unused   → 活動進行中，可報到
+used     → 已核銷
+```
+
+### 取消資格
+```ts
+canCancel(tx):
+  status !== "confirmed" → false
+  有 cancellationDeadline → 比對現在時間
+  無 cancellationDeadline → 比對 eventStartTime
+```
+
+### 活動時間限制（validateEventForm）
+```
+registrationEnd 只需要 <= eventEndTime（不是 eventStartTime）
+這讓「活動進行中仍可報名」成為可能
+```
+
+---
+
+## Sentry 設定
+
+```ts
+// src/main.tsx
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN,
+  enabled: !!import.meta.env.VITE_SENTRY_DSN,  // 沒設 DSN 就靜默停用
+  tracesSampleRate: 0.1,
+  integrations: [Sentry.browserTracingIntegration()],
+})
+
+// src/App.tsx
+<Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+export default Sentry.withProfiler(App)
+```
+
+Sentry Dashboard：`jonasliu0728.sentry.io`（project: javascript-react）

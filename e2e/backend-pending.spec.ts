@@ -24,6 +24,7 @@ test("核銷功能：手動核銷後票券狀態應更新為已核銷", async ({
   const checkinBtn = page.locator("button:has-text('核銷')").first()
   if (await checkinBtn.count() > 0) {
     page.on("dialog", dialog => dialog.accept())
+    await page.waitForLoadState("networkidle") 
     await checkinBtn.click()
     await page.waitForTimeout(1000)
 

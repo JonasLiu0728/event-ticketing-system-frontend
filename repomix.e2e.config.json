@@ -1,0 +1,17 @@
+{
+  "output": {
+    "filePath": "repomix-e2e.xml",
+    "style": "xml"
+  },
+  "include": [
+    "e2e/**",
+    "playwright.config.ts"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      "test-results/**"
+    ]
+  }
+}

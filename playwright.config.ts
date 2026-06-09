@@ -3,7 +3,6 @@ import { defineConfig } from "@playwright/test"
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30000,
-  //maxFailures: 1,
   use: {
     headless: true,
     screenshot: "only-on-failure",
@@ -24,6 +23,18 @@ export default defineConfig({
       name: "production",
       use: {
         baseURL: "https://event-ticketing-system-frontend-eight.vercel.app",
+      },
+    },
+    {
+      name: "demo",
+      use: {
+        baseURL: "https://event-ticketing-system-frontend-eight.vercel.app",
+        headless: false,
+        launchOptions: {
+          slowMo: 800,
+        },
+        video: "on",
+        viewport: { width: 1280, height: 720 },
       },
     },
   ],

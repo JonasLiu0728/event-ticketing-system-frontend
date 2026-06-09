@@ -131,8 +131,11 @@ test.describe("使用者管理", () => {
   test("可以修改使用者角色", async ({ page }) => {
     const roleSelect = page.locator("select").nth(2)
     if (await roleSelect.count() > 0) {
+      const originalRole = await roleSelect.inputValue()  // 記住原本角色
       await roleSelect.selectOption("hr")
       await expect(roleSelect).toHaveValue("hr")
+      await roleSelect.selectOption(originalRole)          // 改回去
+      await expect(roleSelect).toHaveValue(originalRole)
     }
   })
 
@@ -159,6 +162,7 @@ test.describe("核銷", () => {
     await page.waitForSelector("text=核銷")
     await page.locator("text=核銷").first().click()
     await expect(page).toHaveURL(/\/admin\/events\/.*\/checkin$/)
+    await page.waitForLoadState("networkidle") 
   })
 
   test("可以搜尋票券", async ({ page }) => {
@@ -167,14 +171,4 @@ test.describe("核銷", () => {
     await expect(page.getByRole("heading", { name: "核銷" })).toBeVisible()
   })
 
-  test("可以手動核銷票券", async ({ page }) => {
-    const checkinBtn = page.locator("button:has-text('核銷')").first()
-    if (await checkinBtn.count() > 0) {
-      page.on("dialog", dialog => dialog.accept())
-      await checkinBtn.click()
-      await page.waitForTimeout(500)
-      // ✅ 改成確認按鈕消失就好，不找「完成」文字
-      await expect(checkinBtn).not.toBeVisible()
-    }
-  })
 })

@@ -10,14 +10,19 @@
       "node_modules/**",
       "dist/**",
       ".env*",
-      "test.txt",
       "repomix-output.xml",
-      "src/assets/*.jpg",
-      "src/assets/*.png",
-      "src/assets/*.svg",
+      "src/assets/**",
       "public/**",
       "*.lock",
-      "package-lock.json"
+      "package-lock.json",
+      "test-results/**",
+      "src/mock/**",
+      "src/App.css",
+      "e2e/**",
+      "指令集/**",
+      "系統markdown.txt",
+      "要修正的問題.txt",
+      "seed_events.sh"
     ]
   }
 }
