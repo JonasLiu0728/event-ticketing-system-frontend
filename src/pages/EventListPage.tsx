@@ -16,7 +16,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   culture: "文藝", family: "親子", contest: "競賽", music: "音樂",
 }
 
-const SORT_LABELS: Record<SortOption, string> = {
+const SORT_LABELS: Partial<Record<SortOption, string>> = {
   recommended:        "為你推薦",
   popular:            "最熱門",
   status_registering: "報名中",
