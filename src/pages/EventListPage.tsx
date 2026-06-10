@@ -20,7 +20,6 @@ const SORT_LABELS: Record<SortOption, string> = {
   recommended:        "為你推薦",
   popular:            "最熱門",
   status_registering: "報名中",
-  status_waitlist:    "候補中",
 }
 
 function EventListPage() {
