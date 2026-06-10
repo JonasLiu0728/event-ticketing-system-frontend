@@ -9,6 +9,7 @@ import PageTransition from "../components/PageTransition"
 import Toast from "../components/Toast"
 import { useToast } from "../hooks/useToast"
 import { useDebounce } from "../hooks/useDebounce"
+import { isUnlimitedTicket } from "../utils/eventStatus"
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   not_open:    { label: "尚未開始報名", color: "text-zinc-400",   bg: "bg-zinc-800" },
@@ -264,7 +265,12 @@ function EventDetailPage() {
                 <span>取消截止：{new Date(event.cancellationDeadline).toLocaleString("zh-TW")}</span>
               </div>
             )}
-            {event.ticketLimit && (
+            {isUnlimitedTicket(event.ticketLimit) ? (
+              <div className="flex items-center gap-2 text-zinc-400">
+                <span>🎫</span>
+                <span>名額：<span className="text-white font-medium">不限</span></span>
+              </div>
+            ) : (
               <div className="flex items-center gap-2 text-zinc-400">
                 <span>🎫</span>
                 <span>
@@ -328,7 +334,7 @@ function EventDetailPage() {
               <span className="text-zinc-300 text-sm">自行開車</span>
             </label>
 
-            {event.guestAllowed && !event.ticketLimit && (
+            {event.guestAllowed && isUnlimitedTicket(event.ticketLimit) && (
               <div>
                 <label className="text-zinc-400 text-sm block mb-2">
                   攜帶家屬人數：<span className="text-white font-semibold">{guestCount} 人</span>

@@ -68,6 +68,11 @@ describe("EventCard 顯示內容", () => {
     expect(screen.getByText("50")).toBeInTheDocument()
   })
 
+  it("票數限制為 0 時仍應該顯示總名額", () => {
+    render(<EventCard event={{ ...mockEvent, ticketLimit: 0 }} onClick={() => {}} />)
+    expect(screen.getByText("0")).toBeInTheDocument()
+  })
+
   it("沒有票數限制時不應該顯示名額", () => {
     render(<EventCard event={{ ...mockEvent, ticketLimit: null }} onClick={() => {}} />)
     expect(screen.queryByText("50")).not.toBeInTheDocument()

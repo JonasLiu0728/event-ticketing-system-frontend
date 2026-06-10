@@ -1,4 +1,9 @@
 import type { Event } from "../types"
+export const UNLIMITED_TICKETS = 1_000_000
+
+export function isUnlimitedTicket(ticketLimit: number | null | undefined): boolean {
+  return ticketLimit == null || ticketLimit >= UNLIMITED_TICKETS
+}
 
 export interface StatusConfig {
   label: string
@@ -36,9 +41,11 @@ export function getCategoryEmoji(category: string): string {
 
 // 剩餘票數低於 10% 視為「快沒了」
 export function isLowTicket(event: Pick<Event, "ticketLimit" | "remainingTickets">): boolean {
-  return event.ticketLimit != null && event.remainingTickets < event.ticketLimit / 10
+  if (isUnlimitedTicket(event.ticketLimit)) return false
+  return event.remainingTickets < event.ticketLimit! / 10
 }
 
 export function isFull(event: Pick<Event, "ticketLimit" | "remainingTickets">): boolean {
-  return event.ticketLimit != null && event.remainingTickets === 0
+  if (isUnlimitedTicket(event.ticketLimit)) return false
+  return event.remainingTickets === 0
 }

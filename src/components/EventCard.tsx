@@ -1,5 +1,5 @@
 import type { Event } from "../types"
-import { getStatusConfig, getCategoryEmoji } from "../utils/eventStatus"
+import { getStatusConfig, getCategoryEmoji, isUnlimitedTicket } from "../utils/eventStatus"
 
 interface Props {
   event: Event
@@ -57,10 +57,12 @@ function EventCard({ event, onClick }: Props) {
           >
             {config.label}
           </span>
-          {event.ticketLimit && (
+          {!isUnlimitedTicket(event.ticketLimit) ? (
             <span className="text-xs text-zinc-500">
               名額 <span className="text-white font-medium">{event.ticketLimit}</span> 人
             </span>
+          ) : (
+            <span className="text-xs text-zinc-500">不限名額</span>
           )}
         </div>
       </div>

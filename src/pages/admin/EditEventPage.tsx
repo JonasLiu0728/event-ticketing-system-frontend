@@ -4,6 +4,7 @@ import { getEventById, updateEvent, deleteEvent } from "../../api/events"
 import PageTransition from "../../components/PageTransition"
 import { validateEventForm } from "../../utils/validateEventForm"
 import MapPicker from "../../components/MapPicker"
+import { UNLIMITED_TICKETS } from "../../utils/eventStatus"
 
 const CATEGORIES = [
   { value: "sport", label: "運動" },
@@ -73,7 +74,7 @@ function EditEventPage() {
           eventEndTime: toDatetimeLocal(event.eventEndTime),
           registrationStart: toDatetimeLocal(event.registrationStart),
           registrationEnd: toDatetimeLocal(event.registrationEnd),
-          ticketLimit: event.ticketLimit ? String(event.ticketLimit) : "",
+          ticketLimit: event.ticketLimit != null ? String(event.ticketLimit) : "",
           cancellationDeadline: toDatetimeLocal(event.cancellationDeadline),
           isDraft: event.isDraft ?? false,
         })
@@ -132,7 +133,7 @@ function EditEventPage() {
         eventEndTime: new Date(form.eventEndTime).toISOString(),
         registrationStart: new Date(form.registrationStart).toISOString(),
         registrationEnd: new Date(form.registrationEnd).toISOString(),
-        ticketLimit: form.ticketLimit ? Number(form.ticketLimit) : null,
+        ticketLimit: form.ticketLimit ? Number(form.ticketLimit) : UNLIMITED_TICKETS,
         cancellationDeadline: form.cancellationDeadline
           ? new Date(form.cancellationDeadline).toISOString()
           : null,
@@ -255,7 +256,7 @@ function EditEventPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>票數限制（留空代表不限制）</label>
-              <input name="ticketLimit" value={form.ticketLimit} onChange={handleChange} placeholder="50" type="number" className={inputClass} />
+              <input name="ticketLimit" value={form.ticketLimit} onChange={handleChange} placeholder="50" type="number" max="999999" className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>取消截止時間（留空代表不可取消）</label>

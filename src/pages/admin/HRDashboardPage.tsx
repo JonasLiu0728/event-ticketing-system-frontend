@@ -5,7 +5,7 @@ import { StatCardSkeleton } from "../../components/Skeleton"
 import { getEvents } from "../../api/events"
 import { getEventRegistrations } from "../../api/transactions"
 import { getEventTickets } from "../../api/tickets"
-
+import {  isUnlimitedTicket } from "../../utils/eventStatus"
 // 前端自己定義統計資料的型別
 interface EventStat {
   eventId: string
@@ -129,10 +129,10 @@ function HRDashboardPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map(stat => {
-              const cap = stat.ticketLimit ?? stat.totalConfirmed
+              const cap = isUnlimitedTicket(stat.ticketLimit) ? stat.totalConfirmed : stat.ticketLimit!
 
               // 以下顏色判斷：前端算
-              const waitlistColor = stat.ticketLimit && stat.totalWaitlist > stat.ticketLimit
+              const waitlistColor = stat.ticketLimit != null && stat.totalWaitlist > stat.ticketLimit
                 ? "text-red-400"
                 : "text-amber-400"
 
