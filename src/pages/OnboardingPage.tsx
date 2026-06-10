@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getMe } from "../api/auth"
 import { updateUser } from "../api/users"
 import PageTransition from "../components/PageTransition"
+import { getDefaultRoute } from "../utils/roles"
 
 const CATEGORIES = [
   { value: "sport",   label: "🏃 運動" },
@@ -45,7 +46,7 @@ function OnboardingPage() {
         autofill: { dietType, selfDriving },
       })
       localStorage.setItem("userTags", JSON.stringify(tags))
-      navigate("/events", { replace: true })
+      navigate(getDefaultRoute(me.role), { replace: true })
     } catch {
       setError("儲存失敗，請稍後再試")
       setSaving(false)
@@ -53,7 +54,8 @@ function OnboardingPage() {
   }
 
   function handleSkip() {
-    navigate("/events", { replace: true })
+    if (!me) return
+    navigate(getDefaultRoute(me.role), { replace: true })
   }
 
   if (isLoading) return (
