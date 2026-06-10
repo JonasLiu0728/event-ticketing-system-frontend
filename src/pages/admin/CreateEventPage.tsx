@@ -238,6 +238,7 @@ function CreateEventPage() {
                   <span className="text-zinc-600 text-xs whitespace-nowrap flex-shrink-0 w-4">或</span>
                   <input
                     type="datetime-local"
+                    name="registrationEnd"
                     value={form.registrationEnd}
                     onChange={handleEndDateChange}
                     className={inputClass}
