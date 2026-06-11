@@ -15,3 +15,11 @@
 
 2.
 
+
+【問AI】
+1. router功能是什麼?
+2. React query具體如何運作
+3. Debounce具體怎麼用做 是我自己寫的嗎 : 自己寫的，每次點按鈕的時候會讓他停5秒，只會發送一個請求
+4. FetchWithRetry具體怎麼運作 : 第一次收到失敗訊息之後 停一秒 接著停兩秒 再來停4秒
+5. Infustructure是什麼意思 畫在架構圖中會不會有點多餘 : 的是支撐應用程式運作的底層運算資源與網路架構，例如專案 architecture.txt 中提到的 GKE（Google Kubernetes Engine）、Cloudflare 與 Ingress Controller
+6. 裡面的 409 state caaching是什麼功能?

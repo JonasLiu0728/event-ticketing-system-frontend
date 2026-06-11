@@ -1,4 +1,4 @@
 git add .
-git commit -m "新增demo錄影程式碼"
+git commit -m "新增sentry"
 git push origin main
 
