@@ -263,13 +263,6 @@ function LoginPage() {
                 >
                   {loading ? "登入中..." : "登入"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => { throw new Error("This is your first error!") }}
-                  className="w-full py-2 text-zinc-600 hover:text-zinc-400 text-xs"
-                >
-                  Break the world
-                </button>
               </form>
             )}
 
